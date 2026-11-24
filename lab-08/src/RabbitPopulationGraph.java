@@ -73,7 +73,7 @@ public class RabbitPopulationGraph extends JFrame {
             g.drawString("0.0", 20, height + 55);
             g.drawString("Generation", width / 2, height + 85);
 
-            g.setColor(Color.BLUE);
+            g.setColor(Color.MAGENTA);
 
             int previousX = 50;
             int previousY = 50 + (int) ((1 - x) * height);
