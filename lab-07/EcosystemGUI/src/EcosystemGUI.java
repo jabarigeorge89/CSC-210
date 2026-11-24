@@ -128,6 +128,10 @@ public class EcosystemGUI {
         info.append("Temperature: ").append(tile.getTemperature()).append("\n");
         info.append("Nutrients: ").append(tile.getNutrient()).append("\n\n");
 
+        if (tile.isEmpty()) {
+            info.append("No creatures in this cell.\n");
+        }
+
         for (Creature creature : tile.getOccupants()) {
             info.append("Species: ")
                 .append(creature.getClass().getSimpleName()).append("\n");
@@ -141,14 +145,29 @@ public class EcosystemGUI {
     private void step() {
         if (world == null) return;
 
-        world.takeTurn();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+
+        try (PrintStream capture = new PrintStream(output)) {
+            System.setOut(capture);
+            world.takeTurn();
+        } finally {
+            System.setOut(originalOut);
+        }
+
         refreshGrid();
 
+        activityLog.append(output.toString());
         activityLog.append("Turn " + world.getTurn()
-                + " completed.\n");
+                + " completed.\n\n");
+
+        activityLog.setCaretPosition(
+                activityLog.getDocument().getLength());
     }
 
     private void togglePlay() {
+        if (world == null) return;
+
         if (timer.isRunning()) {
             timer.stop();
             playButton.setText("Play");
@@ -161,6 +180,7 @@ public class EcosystemGUI {
                 }
 
                 timer.setDelay(speed);
+                timer.setInitialDelay(speed);
                 timer.start();
                 playButton.setText("Stop");
             } catch (NumberFormatException e) {
@@ -171,6 +191,9 @@ public class EcosystemGUI {
     }
 
     private void chooseFile() {
+        timer.stop();
+        playButton.setText("Play");
+
         JFileChooser chooser = new JFileChooser(".");
 
         if (chooser.showOpenDialog(frame)
@@ -182,6 +205,9 @@ public class EcosystemGUI {
 
     private void saveWorld() {
         if (world == null) return;
+
+        timer.stop();
+        playButton.setText("Play");
 
         JFileChooser chooser = new JFileChooser(".");
         chooser.setSelectedFile(new File("saved-world.config"));
